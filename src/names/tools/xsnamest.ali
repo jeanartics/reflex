@@ -1,0 +1,219 @@
+V "GNAT Lib v2019"
+M P W=b
+P ZX
+
+RN
+RV NO_EXCEPTION_HANDLERS
+RV NO_EXCEPTIONS
+RV NO_IO
+RV NO_NESTED_FINALIZATION
+RV NO_SECONDARY_STACK
+RV NO_STANDARD_STORAGE_POOLS
+RV NO_DEFAULT_INITIALIZATION
+RV NO_DYNAMIC_SIZED_OBJECTS
+RV SPARK_05
+
+U xsnamest%b		xsnamest.adb		f99f3e63 NE OO SU
+W ada%s			ada.ads			ada.ali
+Z ada.exceptions%s	a-except.adb		a-except.ali
+W ada.streams%s		a-stream.adb		a-stream.ali
+W ada.streams.stream_io%s  a-ststio.adb		a-ststio.ali
+W ada.strings%s		a-string.ads		a-string.ali
+W ada.strings.maps%s	a-strmap.adb		a-strmap.ali
+W ada.strings.maps.constants%s  a-stmaco.ads	a-stmaco.ali
+W ada.strings.unbounded%s  a-strunb.adb		a-strunb.ali
+W ada.strings.unbounded.text_io%s  a-suteio.adb	a-suteio.ali
+Z ada.tags%s		a-tags.adb		a-tags.ali
+W ada.text_io%s		a-textio.adb		a-textio.ali
+W gnat%s		gnat.ads		gnat.ali
+W gnat.spitbol%s	g-spitbo.adb		g-spitbo.ali
+W gnat.spitbol.patterns%s  g-spipat.adb		g-spipat.ali
+Z interfaces%s		interfac.ads		interfac.ali
+Z system.concat_2%s	s-conca2.adb		s-conca2.ali
+Z system.secondary_stack%s  s-secsta.adb	s-secsta.ali
+Z system.soft_links%s	s-soflin.adb		s-soflin.ali
+Z system.standard_library%s  s-stalib.adb	s-stalib.ali
+W xutil%s		xutil.adb		xutil.ali
+
+D ada.ads		20190518041256 76789da1 ada%s
+D a-charac.ads		20190518041256 2d3ec45b ada.characters%s
+D a-chlat1.ads		20190518041256 66457d31 ada.characters.latin_1%s
+D a-except.ads		20190518041256 291912d5 ada.exceptions%s
+D a-finali.ads		20190518041256 bf4f806b ada.finalization%s
+D a-ioexce.ads		20190518041256 e4a01f64 ada.io_exceptions%s
+D a-stream.ads		20190518041256 119b8fb3 ada.streams%s
+D a-ststio.ads		20190518041256 a75f3183 ada.streams.stream_io%s
+D a-string.ads		20190518041256 90ac6797 ada.strings%s
+D a-strmap.ads		20190518041256 e8bb714a ada.strings.maps%s
+D a-stmaco.ads		20190518041256 1c0e5368 ada.strings.maps.constants%s
+D a-strunb.ads		20190518041256 1656705b ada.strings.unbounded%s
+D a-suteio.ads		20190518041256 26d8e9aa ada.strings.unbounded.text_io%s
+D a-tags.ads		20190518041258 491b781d ada.tags%s
+D a-textio.ads		20190518041258 aef4d56d ada.text_io%s
+D a-unccon.ads		20190518041256 0e9b276f ada.unchecked_conversion%s
+D gnat.ads		20190518041258 b5988c27 gnat%s
+D g-spitbo.ads		20190518041256 cd32cd2c gnat.spitbol%s
+D g-spipat.ads		20190518041258 9a434fd3 gnat.spitbol.patterns%s
+D interfac.ads		20190518041256 5ab55268 interfaces%s
+D i-cstrea.ads		20190518041256 e53d8b8e interfaces.c_streams%s
+D system.ads		20190518041258 32a08138 system%s
+D s-atocou.ads		20190518041258 b45c2d8d system.atomic_counters%s
+D s-conca2.ads		20190518041256 02a0d7d0 system.concat_2%s
+D s-crtl.ads		20190518041256 0ebbdb71 system.crtl%s
+D s-exctab.ads		20190518041256 54135002 system.exception_table%s
+D s-ficobl.ads		20190518041258 078245e4 system.file_control_block%s
+D s-finmas.ads		20190518041256 7811a767 system.finalization_masters%s
+D s-finroo.ads		20190518041258 4ff27390 system.finalization_root%s
+D s-memory.ads		20190518041256 597d6634 system.memory%s
+D s-parame.ads		20190518041258 48ec542b system.parameters%s
+D s-pooglo.ads		20190518041256 ede33ef8 system.pool_global%s
+D s-secsta.ads		20190518041258 20bbe636 system.secondary_stack%s
+D s-soflin.ads		20190518041256 a7318a92 system.soft_links%s
+D s-stache.ads		20190518041258 a37c21ec system.stack_checking%s
+D s-stalib.ads		20190518041258 09bd3940 system.standard_library%s
+D s-stalib.adb		20190518041256 f2fe2716 system.standard_library%b
+D s-stoele.ads		20190518041258 2dc34a04 system.storage_elements%s
+D s-stopoo.ads		20190518041256 b16154c2 system.storage_pools%s
+D s-stposu.ads		20190518041256 97a6219c system.storage_pools.subpools%s
+D s-stratt.ads		20190518041256 aedef97e system.stream_attributes%s
+D s-traent.ads		20190518041256 005bf670 system.traceback_entries%s
+D s-unstyp.ads		20190518041256 34867c83 system.unsigned_types%s
+D s-wchcon.ads		20190518041256 1b7d22d2 system.wch_con%s
+D xsnamest.adb		20210308130526 a3b3376c xsnamest%b
+D xutil.ads		20171123154044 c0cdd4cd xutil%s
+G a e
+G c Z b b [xsnamest standard 45 11 none]
+G r c none [xsnamest standard 45 11 none] [put_line xutil 39 14 none]
+X 1 ada.ads
+16K9*Ada 20e8 45|33r6 33r41 34r6 34r41 35r6 35r41 36r6 36r41 37r6 37r41 38r6
+. 38r41 49r11 50r11 52r11 53r11
+X 7 a-stream.ads
+36K13*Streams 87e16 45|38r10 38r45 52r15 53r15
+X 8 a-ststio.ads
+39K21*Stream_IO 223e26 45|38w18 38r53 52r23 53r23
+44P9*File_Type 45|52r33 53r33
+46n32*Out_File{46E9} 45|175r18 176r18
+67U14*Create 45|175s4 176s4
+X 9 a-string.ads
+16K13*Strings 35e16 45|33r10 33r45 34r10 34r45 35r10 35r45 36r10 36r45
+X 10 a-strmap.ads
+38K21*Maps 411e21 45|35w18 35r53 36r18 36r53
+46A9*Character_Set<137A9>
+107A9*Character_Mapping(character) 45|73r27
+121V13*To_Mapping{107A9} 45|73s48
+137A9 Character_Set_Internal(boolean)<character>
+X 11 a-stmaco.ads
+38K26*Constants 915e31 45|36w23 36r58
+45a4*Lower_Set{10|46A9} 45|68r50
+54a4*Lower_Case_Map{10|107A9} 45|220r34 223r34 226r49
+X 12 a-strunb.ads
+82K21*Unbounded 756e26 45|33w18 33r53 34r18 34r53
+151V14*"&"{87R9} 45|211s21 211s29 212s13 212s26
+159V14*"&"{87R9} 45|211s33 230s50
+167V14*"&"{87R9} 45|230s42
+175V14*"&"{87R9} 45|212s20
+183V14*"&"{87R9} 45|226s29
+458V13*Translate{87R9} 45|219s28 226s31
+465U14*Translate 45|220s16 223s16
+X 13 a-suteio.ads
+39K31*Text_IO 61e34 45|34w28 34r63
+42V13*Get_Line{12|87R9} 45|182s15 190s15 239s15 246s15
+X 15 a-textio.ads
+57K13*Text_IO 727e16 45|37w10 37r45 49r15 50r15
+64P9*File_Type 45|49r23 50r23
+66n23*In_File{66E9} 45|167r15 168r15
+114U14*Open 45|167s4 168s4
+312V13*End_Of_File{boolean} 45|189s22 245s14
+X 17 gnat.ads
+34K9*GNAT 57e9 45|40r6 40r41 41r6 41r41 47r23
+X 18 g-spitbo.ads
+44K14*Spitbol 394e17 45|40w11 40r46 41r11 41r46 47r28
+51R12*VString{12|87R9} 45|47r36
+59r4*Nul=59:48{12|87R9} 45|55r23 56r23 57r23 58r23 59r23 60r23 110r37
+120V13*Lpad{51R12} 45|205s21 207s21
+204V14*"&"{string} 45|128s46 130s23
+211V13*V{51R12} 45|205s27 207s27
+X 19 g-spipat.ads
+69K22*Patterns 1187e26 45|41w19 41r54
+652R9*Pattern<5|43R9> 1156e14 45|62r24 67r24 68r24 69r24 99r24 101r24 103r24
+. 145r28
+704V14*"&"{652R9} 45|62s50 63s35 65s35 68s43 68s61 68s68 100s35 102s35 104s35
+705V14*"&"{652R9} 45|67s43 147s40
+706V14*"&"{652R9} 45|64s35 99s46 101s46 103s46
+728V14*"*"{652R9} 45|62s46 62s64 63s48 65s42 67s50 69s46 100s50 102s50 104s50
+. 147s54
+788V13*Any{652R9} 45|68s45
+800V13*Break{652R9} 45|100s37 102s37 104s37
+802V13*Break{652R9} 45|62s52 147s42
+866V13*Pos{652R9} 45|68s35 68s70
+872V13*Rest{652R9} 45|65s37 67s45 68s63
+896V13*Span{652R9} 45|62s35 63s37 69s35 99s35 101s35 103s35
+935b4*Anchored_Mode{boolean} 45|178m4
+957V13*Match{boolean} 45|192s14 195s13 197s16 199s16 214s13 229s20
+961V13*Match{boolean} 45|183s17 204s13 240s17
+994V13*Match{boolean} 45|222s23
+1047R9*Match_Result 1180e14 45|75r8
+1058V13*Match{boolean} 45|218s16
+1068U14*Replace 45|219s16
+X 22 system.ads
+67M9*Address
+X 30 s-memory.ads
+53V13*Alloc{22|67M9} 103i<c,__gnat_malloc>22
+68U14*Free 104i<c,__gnat_free>22
+76V13*Realloc{22|67M9} 105i<c,__gnat_realloc>22
+X 37 s-stalib.adb
+93U14 Break_Start 94i<c,__gnat_break_start>22
+X 45 xsnamest.adb
+45U11*XSnamesT 45b11 250l5 250t13
+47R12 VString{18|51R12} 55r12 56r12 57r12 58r12 59r12 60r12 110r26 144r21
+49p4 InS{15|64P9} 167m10 167r10 189r35 190r25
+50p4 InB{15|64P9} 168m10 168r10 182r25 239r25 245r27 246r25
+52p4 OutS{8|44P9} 175m12 175r12 193r20 211r13
+53p4 OutB{8|44P9} 176m12 176r12 184r17 187r14 230r26 243r14 247r17
+55r4 A{47R12} 62r48 69r48 211r19 219r39
+55r7 B{47R12} 63r50 211r31
+56r4 Line{47R12} 182m7 183r24 184r23 187r20 190m7 192r21 193r26 195r20 197r23
+. 199r23 239m7 240r24 243r20 246m7 247r23
+57r4 Name0{47R12} 62r66 204r20 211r23 214r20 215m13 218r23 220m27 220r27
+. 222r30 223m27 223r27 226m16 226r42 229r27 230r44
+58r4 Name1{47R12} 67r52 100r52 102r52 104r52 215r22
+59r4 Oval{47R12} 205m13 207m13 212r15
+60r4 Restl{47R12} 65r44 212r28
+62r4 Name_Ref{19|652R9} 192r27
+67r4 Get_Name{19|652R9} 214r27
+68r4 Chk_Low{19|652R9} 229r34
+69r4 Findu{19|652R9} 218r30
+71i4 Val{natural} 179m4 205r30 207r30 216m13 216r22
+73a4 Xlate_U_Und{10|107A9} 219r42
+75r4 M{19|1047R9} 218r37 219m25 219r25
+77E9 Header_Symbol 77e56 80r38 90r36 106r41 109r28 116r38
+77n27 None{77E9} 109r45
+77n33 Name{77E9} 127r17 233r33
+77n39 Attr{77E9} 196r33
+77n45 Conv{77E9} 198r33
+77n51 Prag{77E9} 200r33
+80U14 Output_Header_Line 80>34 116b14 162l8 162t26 196s13 198s13 200s13 233s13
+80e34 S{77E9} 116b34 127r13 142r35 146r57 151r38 161r23 161r45
+83a4 Header_Name{string} 92m23 92r23
+84a4 Header_Attr{string} 93m23 93r23
+85a4 Header_Conv{string} 94m23 94r23
+86a4 Header_Prag{string} 95m23 95r23
+89P9 String_Ptr(string) 90r54
+90a4 Header_Prefix(89P9) 146r42
+99r4 Get_Attr{19|652R9} 195r26
+101r4 Get_Conv{19|652R9} 197r29
+103r4 Get_Prag{19|652R9} 199r29
+106A9 Header_Symbol_Counter(natural)<77E9> 107r21
+107a4 Header_Counter{106A9} 161m7 161r29
+109e4 Header_Current_Symbol{77E9} 142r10 151m13
+110r4 Header_Pending_Line{47R12}
+117V16 Make_Value{string} 117>28 125b16 132l11 132t21
+117i28 V{integer} 125b28 128r48 130r25
+144r13 Name2{47R12} 147r56
+145r13 Pat{19|652R9}
+148b13 In_Pat{boolean}
+189l4 LoopN 236l13 236e18
+X 46 xutil.ads
+31K9*XUtil 45|43w6 43r41 46|44e10
+39U14*Put_Line 45|184s7 187s4 193s10 210s10 230s16 243s4 247s7
+

@@ -1,0 +1,27 @@
+D:\home\jean\reflex-2020\src\expander\expander.adb:24:06: file "atree.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:25:06: file "debug_a.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:26:06: file "errout.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:27:06: file "exp_aggr.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:28:06: file "exp_attr.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:29:06: file "exp_ch2.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:30:06: file "exp_ch3.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:31:06: file "exp_ch4.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:32:06: file "exp_ch5.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:33:06: file "exp_ch6.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:34:06: file "exp_ch7.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:35:06: file "exp_ch8.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:36:04: (style) space required
+D:\home\jean\reflex-2020\src\expander\expander.adb:37:06: file "exp_ch11.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:38:06: file "exp_ch12.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:39:06: file "exp_ch13.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:40:06: file "exp_prag.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:41:06: file "opt.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:42:06: file "rtsfind.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:43:06: file "sem.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:44:06: file "sem_ch8.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:45:06: file "sem_util.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:46:06: file "sinfo.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.adb:47:06: file "table.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.ads:111:06: file "types.ads" not found
+D:\home\jean\reflex-2020\src\expander\expander.ads:111:06: "Expander (body)" depends on "Expander (spec)"
+D:\home\jean\reflex-2020\src\expander\expander.ads:111:06: "Expander (spec)" depends on "Types (spec)"

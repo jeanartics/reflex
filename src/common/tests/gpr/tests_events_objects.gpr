@@ -1,0 +1,29 @@
+with "aunit";
+with "xmlada";
+
+project Tests_Events_Objects is
+
+   Event_Path :=
+        ("../..",
+	 "../main",
+	 "../src"
+	 );
+
+   Event_Options := ("-gnat2012");
+
+   for Source_Dirs use Event_Path;
+
+   for Object_Dir use "../obj";
+   for Exec_Dir   use "../bin";
+   for Main       use ("tevents_objects.adb");
+
+   package Compiler is
+   	   for Default_Switches ("Ada") use Event_Options;
+   end Compiler;
+
+   package Naming is
+      for Casing use "lowercase";
+   end Naming;
+
+end Tests_Events_Objects;
+

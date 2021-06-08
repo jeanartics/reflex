@@ -1,0 +1,28 @@
+D:\home\jean\reflex-2020\src\names\namet.adb:28:06: file "debug.ads" not found
+D:\home\jean\reflex-2020\src\names\namet.adb:29:06: file "opt.ads" not found
+D:\home\jean\reflex-2020\src\names\namet.adb:30:06: file "output.ads" not found
+D:\home\jean\reflex-2020\src\names\namet.adb:31:06: file "tree_io.ads" not found
+D:\home\jean\reflex-2020\src\names\namet.adb:32:06: file "widechar.ads" not found
+D:\home\jean\reflex-2020\src\names\namet.adb:835:28: (style) space required
+D:\home\jean\reflex-2020\src\names\namet.adb:1704:08: (style) bad indentation
+D:\home\jean\reflex-2020\src\names\namet.adb:1705:12: (style) bad indentation
+D:\home\jean\reflex-2020\src\names\namet.adb:1706:08: (style) bad indentation
+D:\home\jean\reflex-2020\src\names\namet.adb:1708:09: (style) bad indentation
+D:\home\jean\reflex-2020\src\names\namet.adb:1709:08: (style) bad indentation
+D:\home\jean\reflex-2020\src\names\namet.ads:24:06: file "alloc.ads" not found
+D:\home\jean\reflex-2020\src\names\namet.ads:24:06: "Namet (body)" depends on "Namet (spec)"
+D:\home\jean\reflex-2020\src\names\namet.ads:24:06: "Namet (spec)" depends on "Alloc (spec)"
+D:\home\jean\reflex-2020\src\names\namet.ads:25:06: file "table.ads" not found
+D:\home\jean\reflex-2020\src\names\namet.ads:25:06: "Namet (body)" depends on "Namet (spec)"
+D:\home\jean\reflex-2020\src\names\namet.ads:25:06: "Namet (spec)" depends on "Table (spec)"
+D:\home\jean\reflex-2020\src\names\namet.ads:26:06: file "hostparm.ads" not found
+D:\home\jean\reflex-2020\src\names\namet.ads:26:06: "Namet (body)" depends on "Namet (spec)"
+D:\home\jean\reflex-2020\src\names\namet.ads:26:06: "Namet (spec)" depends on "Hostparm (spec)"
+D:\home\jean\reflex-2020\src\names\namet.ads:28:06: file "types.ads" not found
+D:\home\jean\reflex-2020\src\names\namet.ads:28:06: "Namet (body)" depends on "Namet (spec)"
+D:\home\jean\reflex-2020\src\names\namet.ads:28:06: "Namet (spec)" depends on "Types (spec)"
+D:\home\jean\reflex-2020\src\names\namet.ads:342:01: (style) trailing spaces not permitted
+D:\home\jean\reflex-2020\src\names\namet.ads:344:01: (style) trailing spaces not permitted
+D:\home\jean\reflex-2020\src\names\namet.ads:450:01: (style) trailing spaces not permitted
+D:\home\jean\reflex-2020\src\names\namet.ads:535:01: (style) trailing spaces not permitted
+D:\home\jean\reflex-2020\src\names\namet.ads:537:01: (style) trailing spaces not permitted

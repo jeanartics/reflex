@@ -1,0 +1,70 @@
+with "xmlada";
+project Fbd is
+
+   for Source_Dirs use
+     ("../../../../common",
+      "../../../../backend",
+      "../../../../debug",
+      "../../../../driver",
+      "../../../../plc-drivers",
+      "../../../../plc-drivers/driver-unity",
+      "../../../../errors",
+      "../../../../expander",
+      "../../../../fnames",
+      "../../../../freeze",
+      "../../../../frontend",
+      "../../../../rx",
+      "../../../../rx-predicates",	
+      "../../../../rx-expand",
+      "../../../../generators",
+      "../../../../generators/unity",
+      "../../../../global",
+      "../../../../lib", 
+      "../../../../misc",
+      "../../../../mlib",
+      "../../../../names",
+      "../../../../nmake",
+      "../../../../osint",
+      "../../../../output",
+      "../../../../parser",
+      "../../../../prep",
+      "../../../../scanner",
+      "../../../../sem",
+      "../../../../reflex",
+      "../../../../sinfos",
+      "../../../../sinput",
+      "../../../../spark",
+      "../../../../switch",
+      "../../../../transform",
+      "../../../../tree",
+      "../../../../cprint",
+      "../../../../generators/fbd",
+      "../../../../generators/boxes",
+      "../../../../generators/ladder",		
+      "../main",
+      "../src",
+      "../../fbd_graph",
+      "../../fbd_graph/geometry",
+      "../../fbd_graph/events",
+      "../../fbd_graph/model",
+      "../../fbd_graph/util",
+      "../../fbd_graph/view");
+	
+   for Object_Dir use "../obj";
+   for Exec_Dir use "../bin";
+   for Main use ("fbd.adb");
+
+   package Compiler is
+      for Default_Switches ("ada") use ("-gnatp", "-O2", "-gnatVn", "-gnat12");
+   end Compiler;
+
+   package Linker is
+      for Default_Switches ("ada") use ("../obj/smissing.o");
+   end Linker;
+   
+   package Builder is
+      for Executable ("gnat1drv.adb") use "reflex2unity";
+      for Default_Switches ("ada") use ("-s", "-m", "-j9");
+   end Builder;
+end Fbd;
+

@@ -1,0 +1,60 @@
+with "xmlada";
+with "aunit";
+
+project Cells is
+
+   for Source_Dirs use
+       ("../../../../common",
+        "../../../../backend",
+	"../../../../debug",
+	"../../../../driver",
+	"../../../../plc-drivers",
+	"../../../../plc-drivers/driver-unity",
+	"../../../../errors",
+	"../../../../expander",
+	"../../../../fnames",
+	"../../../../freeze",
+	"../../../../frontend",
+	"../../../../rx",
+	"../../../../rx-expand",
+	"../../../../generators",
+	"../../../../generators/unity",
+	"../../../../global",
+	"../../../../lib", 
+        "../../../../misc",
+	"../../../../mlib",
+	"../../../../names",
+	"../../../../nmake",
+	"../../../../osint",
+	"../../../../output",
+	"../../../../parser",
+	"../../../../prep",
+	"../../../../scanner",
+	"../../../../sem",
+	"../../../../reflex",
+	"../../../../sinfos",
+	"../../../../sinput",
+	"../../../../spark",
+	"../../../../switch",
+	"../../../../transform",
+	"../../../../tree",
+	"../../../../cprint",
+        "../../../../generators/boxes",
+        "../../../../generators/ladder",
+	"../main",
+	"../src");
+	
+   for Object_Dir use "../obj";
+   for Exec_Dir use "../bin";
+   for Main use ("tcells.adb");
+
+   package Compiler is
+      for Default_Switches ("ada") use ("-gnatp", "-O2", "-gnatVn", "-gnat12");
+   end Compiler;
+
+   package Linker is
+      for Default_Switches ("ada") use ("../obj/smissing.o");
+   end Linker;
+   
+end Cells;
+

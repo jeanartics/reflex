@@ -1,0 +1,8 @@
+new_name;entity;Mon_Champ;type;address;comment
+New_P1;P1;111;New_P10;Boolean;%MW101;Commentaire de P1
+New_P2;P2;222;New_P20;Integer;%MW102;Commentaire de P2
+New_P3;P3;333;New_P30;Boolean;%MW103;Commentaire de P3
+New_P4;P4;444;New_P40;Integer;%MW104;Commentaire de P4
+New_P5;P5;555;New_P50;Boolean;%MW105;Commentaire de P5
+New_P6;P6;666;New_P60;Integer;%MW106;Commentaire de P6
+New_P7;P7;777;New_P70;Boolean;%MW108;Commentaire de P7

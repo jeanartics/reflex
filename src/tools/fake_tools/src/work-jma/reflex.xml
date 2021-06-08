@@ -1,0 +1,70 @@
+<?xml version="1.0" ?>
+<gprconfig>
+
+  <!-- Reflex configurations -->
+
+  <!-- compiler Reflex PLC-UNITY -->
+  
+  <compiler_description>
+    <name>REFLEX</name>
+    <executable prefix="1">reflex2(unity|s7)</executable>
+    <version>
+      <external>reflex2${PREFIX} -v</external>
+    </version>
+    <languages>Ada</languages>
+    <target>
+      <external>reflex2${PREFIX} -v</external>
+    </target>
+  </compiler_description>
+  
+  <!--  reflex Common compilers configuration -->
+  <configuration>     
+    <compilers>
+      <compiler name="REFLEX" />
+    </compilers>
+    <targets>
+      <target name="unity" />
+    </targets>
+    <config>
+      for Archive_Builder  use ("ar", "cr");
+      -- for Archive_Builder ("reflex_ar");
+      for Archive_Builder_Append_Option use ("q");
+      for Archive_Indexer  use ("ranlib");
+      -- for Archive_Indexer("reflex_ranlib");
+      for Archive_Suffix   use ".a";
+      --for Archive_Suffix   use ".xef";
+      
+      for Library_Support  use "none";
+      
+      package Naming is
+      for Spec_Suffix ("Ada") use ".ads";
+      for Body_Suffix ("Ada") use ".adb";
+      for Casing use "lowercase";
+      for Dot_Replacement use "-";
+      end Naming;
+      
+      package Compiler is
+      -- switch -T for xef Template (change it for -reflexT ... ?)
+      for Leading_Required_Switches ("Ada") use
+
+      for Object_File_Suffix ("Ada") use ".xef";
+      for Driver ("Ada") use "reflex2unity";
+      end Compiler;
+
+      package Binder is
+      --for Driver ("Ada") use "reflex_bind";
+      --for Required_Switches ("Ada") use ("");
+      end Binder;
+
+      package Linker is
+      for Driver use "reflex_link";
+      end Linker;
+
+      package Builder is
+      for Executable_Suffix use ".xef";
+      end Builder;
+
+    </config>
+  </configuration>
+  
+</gprconfig>

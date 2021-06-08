@@ -1,0 +1,8 @@
+entity;new_name;type;langage;comment
+Pack1.Proc1;New_Proc1;section;ladder;Commentaire de P1
+Pack1.Proc2;New_Proc2;sr;literal;Commentaire de P2
+Pack2.Proc3;New_Proc3;dfb;flow;Commentaire de P3
+Pack1.Proc4;New_Proc4;inline;ladder;Commentaire de P4
+Pack2.Proc5;New_Proc5;dfb;literal;Commentaire de P5
+Pack3.Proc6;New_Proc6;section;ladder;Commentaire de P6
+Pack1.Proc7;New_Proc7;section;literal;Commentaire de P7

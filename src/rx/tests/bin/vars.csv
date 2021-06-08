@@ -1,0 +1,8 @@
+entity;;new_name;type;address;comment
+P1;;New_P1;Boolean;%MW101;Commentaire de P1
+P2;;New_P2;Integer;%MW102;Commentaire de P2
+P3;;New_P3;Boolean;%MW103;Commentaire de P3
+P4;;New_P4;Integer;%MW104;Commentaire de P4
+P5;;New_P5;Boolean;%MW105;Commentaire de P5
+P6;;New_P6;Integer;%MW106;Commentaire de P6
+P7;;New_P7;Boolean;%MW108;Commentaire de P7

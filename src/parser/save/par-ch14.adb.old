@@ -1,0 +1,1711 @@
+------------------------------------------------------------------------------
+--                                                                          --
+--                         GNAT COMPILER COMPONENTS                         --
+--                                                                          --
+--                             P A R . R E A C T                            --
+--                                                                          --
+--                                 B o d y                                  --
+--                                                                          --
+--          Copyright (C) 1992-2012, Free Software Foundation, Inc.         --
+--                                                                          --
+-- GNAT is free software;  you can  redistribute it  and/or modify it under --
+-- terms of the  GNU General Public License as published  by the Free Soft- --
+-- ware  Foundation;  either version 3,  or (at your option) any later ver- --
+-- sion.  GNAT is distributed in the hope that it will be useful, but WITH- --
+-- OUT ANY WARRANTY;  without even the  implied warranty of MERCHANTABILITY --
+-- or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License --
+-- for  more details.  You should have  received  a copy of the GNU General --
+-- Public License  distributed with GNAT; see file COPYING3.  If not, go to --
+-- http://www.gnu.org/licenses for a complete copy of the license.          --
+--                                                                          --
+-- GNAT was originally developed  by the GNAT team at  New York University. --
+-- Extensive contributions were provided by Ada Core Technologies Inc.      --
+--                                                                          --
+-- The reactive GNAT part was originally developed  by Artics Inc.          --
+------------------------------------------------------------------------------
+
+--  pragma Style_Checks (Off); -- All_Checks);
+--  Turn off subprogram body ordering check. Subprograms are in order
+--  by RM section rather than alphabetical
+
+with Sinfo.CN; use Sinfo.CN;
+with Ada.Text_IO; use Ada.Text_IO;
+
+separate (Par)
+package body Ch14 is
+
+   --  Local functions, used only in this chapter
+
+   function P_Reactive_Subtype_Mark return Node_Id;
+
+   function P_Reactive_Subtype_Mark_Resync return Node_Id;
+
+   procedure P_Reactive_Mode (Node : Node_Id);
+
+   function P_Reactive_Formal_Part return List_Id;
+
+   function P_Reactive_Parameter_Profile return List_Id;
+
+   function P_Reactive_Initialisation_Parameters_List return List_Id;
+
+   procedure P_Reactive_Declarative_Items
+     (Decls   : List_Id;
+      Done    : out Boolean;
+      In_Spec : Boolean;
+      React   : Node_Id);
+
+   procedure Reactive_Parse_Decls_Begin_End
+     (Proc_Node  : Node_Id;
+      React_Body : Node_Id);
+
+   procedure P_Reactive_One_Section (React_Body : Node_Id);
+
+   procedure P_Reactive_Subprogram (React_Body : Node_Id);
+
+   -------------------
+   -- Reactive Type --
+   -------------------
+
+   --  This routine scans out a reactive type declaration, specification and
+   --  body, or a renaming declaration or generic instantiation starting with
+   --  reactive type
+
+   --  reactive_declaration ::= reactive_specification
+
+   --  reactive_specification ::=
+   --     reactive defining_reactive_name
+   --          initialisation_parameters_list
+   --       with [synchronized] interface
+   --          interface_formal_part
+
+   --  initialisation_parameter_specification ::=
+   --       defining_identifier_list : subtype_mark
+
+   --  initialisation_parameters_list ::=
+   --      [( initialisation_parameter_specification
+   --            {; initialisation_parameter_specification } )]
+
+   --  interface_formal_part ::=
+   --      ( interface_parameter_specification
+   --           { ; interface_parameter_specification } )
+
+   --  interface_parameter_specification ::=
+   --       defining_identifier_list : [ mode ] subtype_mark
+
+   --  mode ::=
+   --     in
+   --   | out
+
+   --  defining_identifier_list ::=
+   --      defining_identifier { , defining_identifier }
+
+   --  defining_identifier ::=
+   --        defining_name
+
+   --  The value in Pf_Flags indicates which of these possible declarations
+   --  is acceptable to the caller:
+
+   --    Pf_Flags.Spcn                 Set if specification OK
+   --    Pf_Flags.Decl                 Set if declaration OK
+   --    Pf_Flags.Gins                 Set if generic instantiation OK
+   --    Pf_Flags.Pbod                 Set if proper body OK
+   --    Pf_Flags.Rnam                 Set if renaming declaration OK
+   --    Pf_Flags.Stub                 Set if body stub OK
+
+   --  If an inappropriate form is encountered, it is scanned out but an
+   --  error message indicating that it is appearing in an inappropriate
+   --  context is issued. The only possible settings for Pf_Flags are those
+   --  defined as constants in package Par.
+
+   --  Note: in all contexts where a package specification is required, there
+   --  is a terminating semicolon. This semicolon is scanned out in the case
+   --  where Pf_Flags is set to Pf_Spcn, even though it is not strictly part
+   --  of the package specification (it's just too much trouble, and really
+   --  quite unnecessary, to deal with scanning out an END where the semicolon
+   --  after the END is not considered to be part of the END.
+
+   --  The caller has checked that the initial token is PACKAGE
+
+   --  Error recovery: cannot raise Error_Resync
+
+   function P_Reactive_Type (Pf_Flags : Pf_Rec) return Node_Id is
+      Reactive_Node         : Node_Id;
+      Spec_Node             : Node_Id;
+      Name_Node             : Node_Id;
+      Body_Description_Node : Node_Id;
+      Reactive_Sloc         : Source_Ptr;
+      Inside_Body           : Boolean := False;
+      Decls                 : List_Id;
+      Reactive_Cid          : Types.Comment_Id;
+   begin
+      Push_Scope_Stack;
+      Scope.Table (Scope.Last).Etyp := E_Name;
+      Scope.Table (Scope.Last).Ecol := Start_Column;
+      Scope.Table (Scope.Last).Lreq := False;
+
+      --  Scope.Table (Scope.Last).Rtyp := RR_React;
+
+      Reactive_Sloc := Token_Ptr;
+      
+      Reactive_Cid := Scanner.Get_Current_Comment;
+      Scanner.Reset_Current_Comment;
+      
+      Spec_Node := New_Node (N_Reactive_Specification, Reactive_Sloc);
+
+      --  Check_Misspelling_Of (Tok_Type);
+
+      if Token = Tok_Type then
+         Error_Msg_SC ("type cannot appear here");
+         Scan; -- past TYPE
+      end if;
+
+      if Token = Tok_Body then
+         if not Pf_Flags.Pbod then
+            Error_Msg_SC ("reactive body cannot appear here!");
+         else
+            Inside_Body := True;
+            T_Body;
+         end if;
+      end if;
+
+      Name_Node := P_Defining_Identifier;
+      Scope.Table (Scope.Last).Labl := Name_Node;
+      Set_Defining_Identifier (Spec_Node, Name_Node);
+
+      --  Scan initialisation_parameters_list
+
+      Set_Initialize_Parameters_List
+        (Spec_Node,
+         P_Reactive_Initialisation_Parameters_List);
+
+      --  Scan with [synchronized] interface
+
+      T_With;
+      if Token = Tok_Synchronized
+        or else Bad_Spelling_Of (Tok_Synchronized) then
+         Scan; -- Pass Synchronized
+         Set_Synchronized_Present (Spec_Node, True);
+      end if;
+
+      if Token = Tok_Interface then
+         Scan;
+         if Token = Tok_Synchronized then
+            Scan;
+            Error_Msg_SC ("SYNCHRONIZED must be before INTERFACE");
+         end if;
+      else
+         Error_Msg_SC ("missing INTERFACE");
+      end if;
+
+      Set_Interface_Parameters_List
+        (Spec_Node,
+         P_Reactive_Interface_Formal_Part);
+
+      --  Case of package body. Note that we demand a package body if that
+      --  is the only possibility (even if the BODY keyword is not present)
+
+      if Inside_Body then
+
+         TF_Is;
+
+         Reactive_Node := New_Node (N_Reactive_Body, Reactive_Sloc);
+	 Attach_Node_Up_Comment (Reactive_Node, Reactive_Cid);
+
+         Body_Description_Node :=
+           New_Node (N_Reactive_Body_Description, Reactive_Sloc);
+
+         Set_Body_Description (Reactive_Node, Body_Description_Node);
+         Set_Specification (Reactive_Node, Spec_Node);
+
+         Decls := P_Reactive_Declarative_Part (Reactive_Node);
+         Set_Declarations (Body_Description_Node, Decls);
+
+         --  Reactive_Parse_Decls_Begin_End (Body_Description_Node);
+
+         End_Statements; --  (Reactive_Node);
+
+         return Reactive_Node;
+
+         --  Cases other than Package_Body
+
+      else
+         Reactive_Node :=  New_Node (N_Reactive_Declaration, Reactive_Sloc);
+	 Attach_Node_Up_Comment (Reactive_Node, Reactive_Cid);
+	 
+         Set_Specification (Reactive_Node, Spec_Node);
+
+         T_Semicolon;
+
+         Pop_Scope_Stack;
+         return Reactive_Node;
+      end if;
+
+   end P_Reactive_Type;
+
+   -------------------------
+   -- 3.2.2  Subtype Mark --
+   -------------------------
+
+   --  SUBTYPE_MARK ::= subtype_NAME;
+
+   --  Note: The subtype mark which appears after an IN or NOT IN
+   --  operator is parsed by P_Range_Or_Subtype_Mark (3.5)
+
+   --  Error recovery: cannot raise Error_Resync
+
+   function P_Reactive_Subtype_Mark return Node_Id is
+   begin
+      return P_Reactive_Subtype_Mark_Resync;
+   exception
+      when Error_Resync =>
+         return Error;
+   end P_Reactive_Subtype_Mark;
+
+   --  This routine differs from P_Subtype_Mark in that it insists that an
+   --  identifier be present, and if it is not, it raises Error_Resync.
+
+   --  Error recovery: can raise Error_Resync
+
+   function P_Reactive_Subtype_Mark_Resync return Node_Id is
+      Type_Node : Node_Id;
+
+   begin
+      if Token = Tok_Array then
+         Error_Msg_SC ("anonymous array definition not allowed here");
+         Discard_Junk_Node (P_Array_Type_Definition);
+         return Error;
+
+      else
+         Type_Node := P_Qualified_Simple_Name_Resync;
+
+         --  Check for a subtype mark attribute. The only valid possibilities
+         --  are 'CLASS and 'BASE. Anything else is a definite error. We may
+         --  as well catch it here.
+
+         if Token = Tok_Apostrophe then
+            Error_Msg_SC ("subtype mark attribute is not allowed here");
+            Discard_Junk_Node (P_Subtype_Mark_Attribute (Type_Node));
+            return Type_Node;
+         else
+            return Type_Node;
+         end if;
+      end if;
+   end P_Reactive_Subtype_Mark_Resync;
+
+   ---------------
+   -- 6.1  Mode --
+   ---------------
+
+   --  MODE ::= [in] | out
+
+   --  Error_Recovery: cannot raise Error_Resync
+
+   procedure P_Reactive_Mode (Node : Node_Id) is
+   begin
+      if Token = Tok_In then
+         Scan; -- past IN
+         Set_In_Present (Node, True);
+      end if;
+
+      if Token = Tok_Out then
+         Scan; -- past OUT
+         if In_Present (Node) then
+            Error_Msg_SC ("IN OUT parameter mode is not allowed in reactive");
+         end if;
+         Set_Out_Present (Node, True);
+      end if;
+
+      if Token = Tok_In then
+         Error_Msg_SC ("IN must precede OUT in parameter mode");
+         Scan; -- past IN
+         Set_In_Present (Node, True);
+      end if;
+   end P_Reactive_Mode;
+
+   ---------------------------------------
+   -- 6.1  Parameter And Result Profile --
+   ---------------------------------------
+
+   --  Parsed by its parent construct, which uses P_Parameter_Profile to
+   --  parse the parameters, and P_Subtype_Mark to parse the return type.
+
+   ----------------------
+   -- 6.1  Formal part --
+   ----------------------
+
+   --  FORMAL_PART ::= (PARAMETER_SPECIFICATION {; PARAMETER_SPECIFICATION})
+
+   --  PARAMETER_SPECIFICATION ::=
+   --    DEFINING_IDENTIFIER_LIST : MODE SUBTYPE_MARK
+
+   --  This scans the construct Formal_Part. The caller has already checked
+   --  that the initial token is a left parenthesis, and skipped past it, so
+   --  that on entry Token is the first token following the left parenthesis.
+
+   --  Error recovery: cannot raise Error_Resync
+
+   function P_Reactive_Formal_Part return List_Id is
+      Specification_List : List_Id;
+      Specification_Node : Node_Id;
+      Scan_State         : Saved_Scan_State;
+      Num_Idents         : Nat;
+      Ident              : Nat;
+      Ident_Sloc         : Source_Ptr;
+
+      Idents : array (Int range 1 .. 4096) of Entity_Id;
+      --  This array holds the list of defining identifiers. The upper bound
+      --  of 4096 is intended to be essentially infinite, and we do not even
+      --  bother to check for it being exceeded.
+
+      Formal_Com_Id  :Types.Comment_Id;
+   begin
+      Specification_List := New_List;
+      Specification_Loop : loop
+         begin
+            if Token = Tok_Pragma then
+               Error_Msg_SC ("pragma not allowed in formal part");
+               Discard_Junk_Node (P_Pragma (Skipping => True));
+            end if;
+
+            Ignore (Tok_Left_Paren);
+            Ident_Sloc := Token_Ptr;
+	    
+	    Formal_Com_Id := Scanner.Get_Current_Comment;
+	    Scanner.Reset_Current_Comment;
+      
+            Idents (1) := P_Defining_Identifier (C_Comma_Colon);
+            Num_Idents := 1;
+
+            Ident_Loop : loop
+               exit Ident_Loop when Token = Tok_Colon;
+
+               --  The only valid tokens are colon and comma, so if we have
+               --  neither do a bit of investigation to see which is the
+               --  better choice for insertion.
+
+               if Token /= Tok_Comma then
+
+                  --  Assume colon if ALIASED, IN or OUT keyword found
+
+                  exit Ident_Loop when Token = Tok_In      or else
+                    Token = Tok_Out;
+
+                  --  Otherwise scan ahead
+
+                  Save_Scan_State (Scan_State);
+                  Look_Ahead : loop
+
+                     --  If we run into a semicolon, then assume that a
+                     --  colon was missing, e.g.  Parms (X Y; ...). Also
+                     --  assume missing colon on EOF (a real disaster!)
+                     --  and on a right paren, e.g. Parms (X Y), and also
+                     --  on an assignment symbol, e.g. Parms (X Y := ..)
+
+                     if Token = Tok_Semicolon
+                       or else Token = Tok_Right_Paren
+                       or else Token = Tok_EOF
+                       or else Token = Tok_Colon_Equal
+                     then
+                        Restore_Scan_State (Scan_State);
+                        exit Ident_Loop;
+
+                        --  If we run into a colon, assume that we had a missing
+                        --  comma, e.g. Parms (A B : ...). Also assume a missing
+                        --  comma if we hit another comma, e.g. Parms (A B, C ..)
+
+                     elsif Token = Tok_Colon
+                       or else Token = Tok_Comma
+                     then
+                        Restore_Scan_State (Scan_State);
+                        exit Look_Ahead;
+                     end if;
+
+                     Scan;
+                  end loop Look_Ahead;
+               end if;
+
+               --  Here if a comma is present, or to be assumed
+
+               T_Comma;
+               Num_Idents := Num_Idents + 1;
+               Idents (Num_Idents) := P_Defining_Identifier (C_Comma_Colon);
+            end loop Ident_Loop;
+
+            --  Fall through the loop on encountering a colon, or deciding
+            --  that there is a missing colon.
+
+            T_Colon;
+
+            --  If there are multiple identifiers, we repeatedly scan the
+            --  type and initialization expression information by resetting
+            --  the scan pointer (so that we get completely separate trees
+            --  for each occurrence).
+
+            if Num_Idents > 1 then
+               Save_Scan_State (Scan_State);
+            end if;
+
+            --  Loop through defining identifiers in list
+
+            Ident := 1;
+
+            Ident_List_Loop : loop
+               Specification_Node :=
+                 New_Node (N_Parameter_Specification, Ident_Sloc);
+	       
+	       Attach_Node_Up_Comment (Specification_Node, Formal_Com_Id);
+
+               Set_Defining_Identifier (Specification_Node, Idents (Ident));
+
+               if Token = Tok_In or else Token = Tok_Out then
+                  P_Reactive_Mode (Specification_Node);
+               end if;
+
+               Set_Parameter_Type
+                 (Specification_Node, P_Reactive_Subtype_Mark);
+
+               if Token = Tok_Colon_Equal
+                 or else Token = Tok_Equal then
+                  Error_Msg_SC
+                    ("default expresssion is not allowed in reactive");
+                  Discard_Junk_Node (Init_Expr_Opt (True));
+               end if;
+
+               if Ident > 1 then
+                  Set_Prev_Ids (Specification_Node, True);
+               end if;
+
+               if Ident < Num_Idents then
+                  Set_More_Ids (Specification_Node, True);
+               end if;
+
+               Append (Specification_Node, Specification_List);
+               exit Ident_List_Loop when Ident = Num_Idents;
+               Ident := Ident + 1;
+               Restore_Scan_State (Scan_State);
+            end loop Ident_List_Loop;
+
+         exception
+            when Error_Resync =>
+               Resync_Semicolon_List;
+         end;
+
+         if Token = Tok_Semicolon then
+            Save_Scan_State (Scan_State);
+            Scan; -- past semicolon
+
+            --  If we have RETURN or IS after the semicolon, then assume
+            --  that semicolon should have been a right parenthesis and exit
+
+            if Token = Tok_Is or else Token = Tok_Return then
+               Error_Msg_SP -- CODEFIX
+                 ("|"";"" should be "")""");
+               exit Specification_Loop;
+            end if;
+
+            --  If we have a declaration keyword after the semicolon, then
+            --  assume we had a missing right parenthesis and terminate list
+
+            if Token in Token_Class_Declk then
+               Error_Msg_AP -- CODEFIX
+                 ("missing "")""");
+               Restore_Scan_State (Scan_State);
+               exit Specification_Loop;
+            end if;
+
+         elsif Token = Tok_Right_Paren then
+            Scan; -- past right paren
+            exit Specification_Loop;
+
+            --  Special check for common error of using comma instead of semicolon
+
+         elsif Token = Tok_Comma then
+            T_Semicolon;
+            Scan; -- past comma
+
+            --  Special check for omitted separator
+
+         elsif Token = Tok_Identifier then
+            T_Semicolon;
+
+            --  If nothing sensible, skip to next semicolon or right paren
+
+         else
+            T_Semicolon;
+            Resync_Semicolon_List;
+
+            if Token = Tok_Semicolon then
+               Scan; -- past semicolon
+            else
+               T_Right_Paren;
+               exit Specification_Loop;
+            end if;
+         end if;
+      end loop Specification_Loop;
+
+      return Specification_List;
+   end P_Reactive_Formal_Part;
+
+
+   ----------------------------
+   -- 6.1  Parameter_Profile --
+   ----------------------------
+
+   --  PARAMETER_PROFILE ::= [FORMAL_PART]
+
+   --  Empty is returned if no formal part is present
+
+   --  Error recovery: cannot raise Error_Resync
+
+   function P_Reactive_Parameter_Profile return List_Id is
+   begin
+      if Token = Tok_Left_Paren then
+         Scan; -- pass left paren
+         return P_Reactive_Formal_Part;
+      else
+         return No_List;
+      end if;
+   end P_Reactive_Parameter_Profile;
+
+   -----------------------------------------------
+   -- P_Reactive_Initialisation_Parameters_List --
+   -----------------------------------------------
+
+   function P_Reactive_Initialisation_Parameters_List return List_Id is
+      Parameters_List : List_Id;
+      Node            : Node_Id;
+   begin
+      Parameters_List := P_Reactive_Parameter_Profile;
+
+      if Is_Non_Empty_List (Parameters_List) then
+         Node := First (Parameters_List);
+         while Present (Node) loop
+            if In_Present (Node) then
+               Error_Msg_SC ("init parameter cannot have mode in");
+            elsif Out_Present (Node) then
+               Error_Msg_SC ("init parameter cannot have mode out");
+            end if;
+            Next (Node);
+         end loop;
+      end if;
+
+      return Parameters_List;
+   end P_Reactive_Initialisation_Parameters_List;
+
+   --------------------------------------
+   -- P_Reactive_Interface_Formal_Part --
+   --------------------------------------
+
+   function P_Reactive_Interface_Formal_Part return List_Id is
+   begin
+      return P_Reactive_Parameter_Profile;
+   end P_Reactive_Interface_Formal_Part;
+
+   -----------------------------
+   -- Reactive_Step_Statement --
+   -----------------------------
+
+   --  This function parses the construct:
+
+   --      DECLARATIVE_PART
+   --    begin
+   --      HANDLED_SEQUENCE_OF_STATEMENTS
+   --    end [NAME];
+
+
+   function P_Reactive_Step_Statement return Node_Id  is
+      Decls     : List_Id;
+      Step_Node : Node_Id;
+      Wait_Node : Node_Id;
+
+      --  Start of processing for Reactive_Parse_Step
+
+   begin
+      Wait_Node := Empty;
+
+      Step_Node := New_Node (N_Reactive_Step_Definition, Token_Ptr);
+      Scan; -- Pass STEP
+
+      Set_Defining_Identifier (Step_Node, P_Defining_Identifier (C_Is));
+
+      T_Is;
+
+      Decls := P_Reactive_Declarative_Part;
+      Set_Declarations (Step_Node, Decls);
+
+      if Token = Tok_Begin then
+         Error_Msg_Col := Scope.Table (Scope.Last).Ecol;
+
+         Scope.Table (Scope.Last).Ecol := Start_Column;
+
+         Scope.Table (Scope.Last).Sloc := Token_Ptr;
+         Scan; -- past BEGIN
+
+         Set_Statements (Step_Node, P_Sequence_Of_Statements (SS_Flow_Sreq));
+
+         if Token = Tok_End
+           or else Bad_Spelling_Of (Tok_End)
+         then
+            Scan;
+            if Token = Tok_Step
+              or else Bad_Spelling_Of (Tok_Step)
+            then
+               Scan;
+            else
+               Error_Msg_SC ("STEP expected");
+            end if;
+
+         elsif Token = Tok_Step
+           or else Bad_Spelling_Of (Tok_Step)
+         then
+            Error_Msg_SC ("END before STEP expected");
+            Scan;
+
+         elsif Token = Tok_When then
+            Error_Msg_SC ("END STEP expected");
+
+         else
+            Error_Msg_SC ("END STEP expected");
+            raise Error_Resync;
+         end if;
+
+         if Token = Tok_When
+           or else Bad_Spelling_Of (Tok_When)
+         then
+            Scan;
+            Wait_Node := New_Node (N_Reactive_Wait_Statement, Token_Ptr);
+            Set_Condition (Wait_Node, P_Condition);
+
+         elsif Token = Tok_Select
+           or else Bad_Spelling_Of (Tok_Select)
+         then
+            Wait_Node := P_Reactive_Select_Statement;
+         else
+            null;
+         end if;
+
+         T_Semicolon;
+
+         if not Present (Wait_Node) then
+            Wait_Node := New_Node (N_Reactive_Pause_Statement, Token_Ptr);
+         end if;
+
+         Set_Step_Identifier (Wait_Node, Step_Node);
+         Set_Is_From_Step (Wait_Node, True);
+
+         Set_Exit_Node (Step_Node, Wait_Node);
+         Set_Is_Anonymous (Step_Node, False);
+
+         --  End_Statements (Handled_Statement_Sequence (Proc_Node));
+
+         --  No BEGIN present
+
+      else
+
+         --  Prepare to issue error message
+
+         Error_Msg_Sloc := Scope.Table (Scope.Last).Sloc;
+         Error_Msg_Node_1 := Scope.Table (Scope.Last).Labl;
+
+         Error_Msg_SC ("missing BEGIN for reactive step#");
+
+         --  Here we pick up the statements after the BEGIN that
+         --  should have been present but was not. We don't insist
+         --  on statements being present if P_Declarative_Part had
+         --  already found a missing BEGIN, since it might have
+         --  swallowed a lone statement into the declarative part.
+
+         if Token = Tok_End then
+            null;
+         else
+            null;
+            --  Set_Statements
+            --    (Reaction_Proc (Parent),
+            --     P_Sequence_Of_Statements);
+         end if;
+      end if;
+
+      return Wait_Node;
+   end P_Reactive_Step_Statement;
+
+   ------------------------------------
+   -- Reactive_Parse_Decls_Begin_End --
+   ------------------------------------
+
+   --  This function parses the construct:
+
+   --      DECLARATIVE_PART
+   --    begin
+   --      HANDLED_SEQUENCE_OF_STATEMENTS
+   --    end [NAME];
+
+
+   procedure Reactive_Parse_Decls_Begin_End
+     (Proc_Node  : Node_Id;
+      React_Body : Node_Id) is
+      Decls         : List_Id;
+      --  Parent_Nkind  : Node_Kind;
+      Proc_Name     : Name_Id;
+
+      procedure Set_Null_HSS;
+      --  Construct an empty handled statement sequence and install in Parent
+      --  Leaves HSS set to reference the newly constructed statement sequence.
+
+      procedure P_Reactive_Initialize;
+      --  Parse Initialize section.
+
+      procedure P_Reactive_Finalize;
+      --  Parse the finalization section.
+
+      procedure P_Reactive_Reaction;
+      --  Parse the reaction section
+
+      procedure P_Reactive_Flow;
+      --  Parse the Flow section.
+
+      ------------------
+      -- Set_Null_HSS --
+      ------------------
+
+      procedure Set_Null_HSS is
+         Null_Stm : Node_Id;
+         HSS      : Node_Id;
+
+      begin
+         Null_Stm :=
+           Make_Null_Statement (Token_Ptr);
+         Set_Comes_From_Source (Null_Stm, False);
+
+         HSS :=
+           Make_Handled_Sequence_Of_Statements
+             (Token_Ptr,
+              Statements => New_List (Null_Stm));
+         Set_Comes_From_Source (HSS, False);
+
+         Set_Handled_Statement_Sequence (Proc_Node, HSS);
+      end Set_Null_HSS;
+
+      ---------------------------
+      -- P_Reactive_Initialize --
+      ---------------------------
+
+      procedure P_Reactive_Initialize is
+      begin
+         Set_Handled_Statement_Sequence
+           (Proc_Node,
+            Make_Handled_Sequence_Of_Statements
+              (Token_Ptr,
+               Statements =>
+                 P_Sequence_Of_Statements (SS_Flow_Sreq)));
+      end P_Reactive_Initialize;
+
+      -------------------------
+      -- P_Reactive_Finalize --
+      -------------------------
+
+      procedure P_Reactive_Finalize is
+      begin
+         Set_Handled_Statement_Sequence
+           (Proc_Node,
+            Make_Handled_Sequence_Of_Statements
+              (Token_Ptr,
+               Statements =>
+                 P_Sequence_Of_Statements (SS_Flow_Sreq)));
+      end P_Reactive_Finalize;
+
+      -------------------------
+      -- P_Reactive_Reaction --
+      -------------------------
+
+      procedure P_Reactive_Reaction is
+      begin
+         Scope.Table (Scope.Last).Reaction_Section := True;
+
+         Set_Handled_Statement_Sequence
+           (Proc_Node,
+            Make_Handled_Sequence_Of_Statements
+              (Token_Ptr,
+               Statements =>
+                 P_Sequence_Of_Statements
+                   (SS_Flow_Sreq, RS_Allow)));
+
+         Scope.Table (Scope.Last).Reaction_Section := False;
+      end P_Reactive_Reaction;
+
+      ---------------------
+      -- P_Reactive_Flow --
+      ---------------------
+
+      procedure P_Reactive_Flow is
+      begin
+         Scope.Table (Scope.Last).Flow_Section := True;
+
+         Set_Handled_Statement_Sequence
+           (Proc_Node,
+            Make_Handled_Sequence_Of_Statements
+              (Token_Ptr,
+               Statements =>
+                 P_Sequence_Of_Statements
+                   (SS_Flow_Sreq, RS_Flow)));
+
+         Scope.Table (Scope.Last).Flow_Section := False;
+      end P_Reactive_Flow;
+
+      --  Start of processing for Parse_Decls_Begin_End
+
+   begin
+      Put_Line (" Reactive_Parse_Decls_Begin_End Begin " & Token'Img);
+      Proc_Name := Chars (Defining_Entity (Proc_Node));
+      Put_Line ("     Name => " & Get_String (Proc_Name));
+
+      if Proc_Name = Name_Initialize then
+         Set_Initialize_Proc (Body_Description (React_Body), Proc_Node);
+      elsif Proc_Name = Name_Finalize then
+         Set_Finalize_Proc (Body_Description (React_Body), Proc_Node);
+      elsif Proc_Name = Name_Reaction then
+         Set_Reaction_Proc (Body_Description (React_Body), Proc_Node);
+      elsif Proc_Name = Name_Flow then
+         Set_Flow_Proc (Body_Description (React_Body), Proc_Node);
+      else
+         raise Program_Error;
+      end if;
+
+      if Token = Tok_Null then
+         Scan; -- Past NULL
+         Set_Null_HSS;
+         Set_Null_Present (Specification (Proc_Node));
+
+         T_Semicolon;
+         Pop_Scope_Stack;
+         return;
+      end if;
+
+      Decls := P_Reactive_Declarative_Part (React_Body);
+      Set_Declarations (Proc_Node, Decls);
+
+      if Token = Tok_Begin then
+
+         Error_Msg_Col := Scope.Table (Scope.Last).Ecol;
+
+	 Scope.Table (Scope.Last).Ecol := Start_Column;
+
+         Scope.Table (Scope.Last).Sloc := Token_Ptr;
+         Scan; -- past BEGIN
+
+         Proc_Name := Chars (Defining_Entity (Proc_Node));
+         if Proc_Name = Name_Initialize then
+            P_Reactive_Initialize;
+
+         elsif Proc_Name = Name_Finalize then
+            P_Reactive_Finalize;
+
+         elsif Proc_Name = Name_Reaction then
+            P_Reactive_Reaction;
+
+         elsif Proc_Name = Name_Flow then
+            P_Reactive_Flow;
+
+         else
+            raise Program_Error;
+         end if;
+
+         End_Statements (Handled_Statement_Sequence (Proc_Node));
+
+         --  No BEGIN present
+
+      else
+         --  Parent_Nkind := Nkind (Parent);
+
+         Set_Null_HSS;
+
+         --  Prepare to issue error message
+
+         Error_Msg_Sloc := Scope.Table (Scope.Last).Sloc;
+         Error_Msg_Node_1 := Scope.Table (Scope.Last).Labl;
+
+         Error_Msg_SC ("missing BEGIN for reactive procedure#");
+
+         --  Here we pick up the statements after the BEGIN that
+         --  should have been present but was not. We don't insist
+         --  on statements being present if P_Declarative_Part had
+         --  already found a missing BEGIN, since it might have
+         --  swallowed a lone statement into the declarative part.
+
+         if Token = Tok_End then
+            null;
+         else
+            null;
+            --  Set_Statements
+            --    (Reaction_Proc (Parent),
+            --     P_Sequence_Of_Statements);
+         end if;
+      end if;
+
+   end Reactive_Parse_Decls_Begin_End;
+
+
+   ------------------------------------
+   -- 3.11 Reactive Declarative Part --
+   ------------------------------------
+
+   --  DECLARATIVE_PART ::= {DECLARATIVE_ITEM}
+
+   --  Error recovery: cannot raise Error_Resync (because P_Declarative_Items
+   --  handles errors, and returns cleanly after an error has occurred)
+
+   function P_Reactive_Declarative_Part
+     (React : Node_Id := Empty) return List_Id is
+      Decls : List_Id;
+      Done  : Boolean;
+
+   begin
+      --  Indicate no bad declarations detected yet. This will be reset by
+      --  P_Declarative_Items if a bad declaration is discovered.
+
+      Missing_Begin_Msg := No_Error_Msg;
+
+      --  Get rid of active SIS entry from outer scope. This means we will
+      --  miss some nested cases, but it doesn't seem worth the effort. See
+      --  discussion in Par for further details
+
+      SIS_Entry_Active := False;
+      Decls := New_List;
+
+      --  Loop to scan out the declarations
+
+      loop
+         P_Reactive_Declarative_Items
+           (Decls => Decls, Done => Done, In_Spec => False, React => React);
+         exit when Done;
+      end loop;
+
+      --  Get rid of active SIS entry which is left set only if we scanned a
+      --  procedure declaration and have not found the body. We could give
+      --  an error message, but that really would be usurping the role of
+      --  semantic analysis (this really is a missing body case).
+
+      SIS_Entry_Active := False;
+      return Decls;
+   end P_Reactive_Declarative_Part;
+
+   ----------------------------
+   -- 3.11  Declarative Item --
+   ----------------------------
+
+   --  DECLARATIVE_ITEM ::= BASIC_DECLARATIVE_ITEM | BODY
+
+   --  Can return Error if a junk declaration is found, or Empty if no
+   --  declaration is found (i.e. a token ending declarations, such as
+   --  BEGIN or END is encountered).
+
+   --  Error recovery: cannot raise Error_Resync. If an error resync occurs,
+   --  then the scan is set past the next semicolon and Error is returned.
+
+   procedure P_Reactive_Declarative_Items
+     (Decls   : List_Id;
+      Done    : out Boolean;
+      In_Spec : Boolean;
+      React   : Node_Id)
+   is
+      Scan_State : Saved_Scan_State;
+      Proc_Name  : Name_Id;
+      Name_Node  : Node_Id;
+
+   begin
+
+      case Token is
+
+         when Tok_Function =>
+            Append (P_Subprogram (Pf_Decl_Gins_Pbod_Rnam_Stub_Pexp), Decls);
+            Done := False;
+
+         when Tok_For =>
+            --  Check for loop (premature statement)
+
+            Save_Scan_State (Scan_State);
+            Scan; -- past FOR
+
+            if Token = Tok_Identifier then
+               Scan; -- past identifier
+
+               if Token = Tok_In then
+                  Restore_Scan_State (Scan_State);
+                  null;
+                  --  Statement_When_Declaration_Expected
+                  --    (Decls, Done, In_Spec);
+                  return;
+               end if;
+            end if;
+
+            --  Not a loop, so must be rep clause
+
+            Restore_Scan_State (Scan_State);
+            Append (P_Representation_Clause, Decls);
+            Done := False;
+
+         when Tok_Generic =>
+            Error_Msg_SC ("generic not allowed in reactive extension");
+            Discard_Junk_Node (P_Generic);
+            Done := False;
+
+         when Tok_Identifier =>
+            --  Special check for misuse of overriding not in Ada 2005 mode
+
+            if Token_Name = Name_Overriding
+              and then not Next_Token_Is (Tok_Colon)
+            then
+               Error_Msg_SC ("overriding indicator is an Ada 2005 extension");
+               Error_Msg_SC ("\unit must be compiled with -gnat05 switch");
+
+               Token := Tok_Overriding;
+               Append (P_Subprogram (Pf_Decl_Gins_Pbod_Rnam_Stub_Pexp), Decls);
+               Done := False;
+
+               --  Normal case, no overriding, or overriding followed by colon
+
+            else
+               P_Identifier_Declarations (Decls, Done, In_Spec);
+            end if;
+
+            --  Ada 2005: A subprogram declaration can start with "not" or
+            --  "overriding". In older versions, "overriding" is handled
+            --  like an identifier, with the appropriate messages.
+
+         when Tok_Not =>
+            Error_Msg_SC
+              ("not procedeure not allowed in reactive extension");
+            Append (P_Subprogram (Pf_Decl_Gins_Pbod_Rnam_Stub_Pexp), Decls);
+            Done := False;
+
+         when Tok_Overriding =>
+            Error_Msg_SC
+              ("overriding procedeure not allowed in reactive extension");
+            Discard_Junk_Node
+              (P_Subprogram (Pf_Decl_Gins_Pbod_Rnam_Stub_Pexp));
+            Done := False;
+
+         when Tok_Package =>
+            Error_Msg_SC ("package not allowed in reactive extension");
+            Discard_Junk_Node (P_Package (Pf_Decl_Gins_Pbod_Rnam_Stub_Pexp));
+            Done := False;
+
+         when Tok_Pragma =>
+            Append (P_Pragma, Decls);
+            Done := False;
+
+         when Tok_Procedure =>
+            Save_Scan_State (Scan_State);
+            Scan; -- past PROCEDURE
+
+            Proc_Name := No_Name;
+
+            if Token = Tok_Identifier then
+               Name_Node := P_Defining_Identifier;
+               Proc_Name := Chars (Name_Node);
+               Put_Line ("Proc Name ==> " & Get_String (Proc_Name));
+            end if;
+
+            Restore_Scan_State (Scan_State); -- back to PROCEDURE
+
+            --  Build and return subprogram body, parsing declarations
+            --  and statement sequence that belong to the body.
+
+            if Proc_Name = Name_Initialize
+              or else Proc_Name = Name_Finalize
+              or else Proc_Name = Name_Reaction
+              or else Proc_Name = Name_Flow
+            then
+               P_Reactive_Subprogram (React);
+            else
+               Append (P_Subprogram (Pf_Decl_Gins_Pbod_Rnam_Stub_Pexp), Decls);
+            end if;
+
+            Done := False;
+
+         when Tok_Type =>
+            Append (P_Type_Declaration, Decls);
+            Done := False;
+
+         when Tok_Subtype =>
+            Append (P_Subtype_Declaration, Decls);
+            Done := False;
+
+         when Tok_Use =>
+            Append (P_Use_Clause, Decls);
+            Done := False;
+
+         when Tok_With =>
+            if Aspect_Specifications_Present then
+
+               --  If we are after a semicolon, complain that it was ignored.
+               --  But we don't really ignore it, since we dump the aspects,
+               --  so we make the error message a normal fatal message which
+               --  will inhibit semantic analysis anyway).
+
+               if Prev_Token = Tok_Semicolon then
+                  Error_Msg_SP -- CODEFIX
+                    ("extra "";"" ignored");
+
+                  --  If not just past semicolon, just complain that aspects are
+                  --  not allowed at this point.
+
+               else
+                  Error_Msg_SC ("aspect specifications not allowed here");
+               end if;
+
+               declare
+                  Dummy_Node : constant Node_Id :=
+                    New_Node (N_Package_Specification, Token_Ptr);
+                  pragma Warnings (Off, Dummy_Node);
+                  --  Dummy node to attach aspect specifications to. We will
+                  --  then throw them away.
+
+               begin
+                  P_Aspect_Specifications (Dummy_Node, Semicolon => True);
+               end;
+
+               --  Here if not aspect specifications case
+
+            else
+               Error_Msg_SC ("WITH can only appear in context clause");
+               raise Error_Resync;
+            end if;
+
+            --  BEGIN terminates the scan of a sequence of declarations unless
+            --  there is a missing subprogram body, see section on handling
+            --  semicolon in place of IS. We only treat the begin as satisfying
+            --  the subprogram declaration if it falls in the expected column
+            --  or to its right.
+
+         when Tok_Begin =>
+            if SIS_Entry_Active and then Start_Column >= SIS_Ecol then
+
+               --  Here we have the case where a BEGIN is encountered during
+               --  declarations in a declarative part, or at the outer level,
+               --  and there is a subprogram declaration outstanding for which
+               --  no body has been supplied. This is the case where we assume
+               --  that the semicolon in the subprogram declaration should
+               --  really have been is. The active SIS entry describes the
+               --  subprogram declaration. On return the declaration has been
+               --  modified to become a body.
+
+               declare
+                  Specification_Node : Node_Id;
+                  Decl_Node          : Node_Id;
+                  Body_Node          : Node_Id;
+
+               begin
+                  --  First issue the error message. If we had a missing
+                  --  semicolon in the declaration, then change the message
+                  --  to <missing "is">
+
+                  if SIS_Missing_Semicolon_Message /= No_Error_Msg then
+                     Change_Error_Text     -- Replace: "missing "";"" "
+                       (SIS_Missing_Semicolon_Message, "missing ""is""");
+
+                     --  Otherwise we saved the semicolon position, so complain
+
+                  else
+                     Error_Msg -- CODEFIX
+                       ("|"";"" should be IS", SIS_Semicolon_Sloc);
+                  end if;
+
+                  --  The next job is to fix up any declarations that occurred
+                  --  between the procedure header and the BEGIN. These got
+                  --  chained to the outer declarative region (immediately
+                  --  after the procedure declaration) and they should be
+                  --  chained to the subprogram itself, which is a body
+                  --  rather than a spec.
+
+                  Specification_Node := Specification (SIS_Declaration_Node);
+                  Change_Node (SIS_Declaration_Node, N_Subprogram_Body);
+                  Body_Node := SIS_Declaration_Node;
+                  Set_Specification (Body_Node, Specification_Node);
+                  Set_Declarations (Body_Node, New_List);
+
+                  loop
+                     Decl_Node := Remove_Next (Body_Node);
+                     exit when Decl_Node = Empty;
+                     Append (Decl_Node, Declarations (Body_Node));
+                  end loop;
+
+                  --  Now make the scope table entry for the Begin-End and
+                  --  scan it out
+
+                  Push_Scope_Stack;
+                  Scope.Table (Scope.Last).Sloc := SIS_Sloc;
+                  Scope.Table (Scope.Last).Etyp := E_Name;
+                  Scope.Table (Scope.Last).Ecol := SIS_Ecol;
+                  Scope.Table (Scope.Last).Labl := SIS_Labl;
+                  Scope.Table (Scope.Last).Lreq := False;
+                  SIS_Entry_Active := False;
+                  Scan; -- past BEGIN
+                  Set_Handled_Statement_Sequence (Body_Node,
+                                                  P_Handled_Sequence_Of_Statements);
+                  End_Statements (Handled_Statement_Sequence (Body_Node));
+               end;
+
+               Done := False;
+
+            else
+               Done := True;
+            end if;
+
+            --  Normally an END terminates the scan for basic declarative items.
+            --  The one exception is END RECORD, which is probably left over from
+            --  some other junk.
+
+         when Tok_End =>
+            Save_Scan_State (Scan_State); -- at END
+            Scan; -- past END
+
+            if Token = Tok_Record then
+               Error_Msg_SP ("no RECORD for this `end record`!");
+               Scan; -- past RECORD
+               TF_Semicolon;
+
+            else
+               Restore_Scan_State (Scan_State); -- to END
+               Done := True;
+            end if;
+
+            --  The following tokens which can only be the start of a statement
+            --  are considered to end a declarative part (i.e. we have a missing
+            --  BEGIN situation). We are fairly conservative in making this
+            --  judgment, because it is a real mess to go into statement mode
+            --  prematurely in response to a junk declaration.
+
+         when Tok_Abort     |
+              Tok_Declare   |
+              Tok_Exit      |
+              Tok_Fork      |
+              Tok_Goto      |
+              Tok_If        |
+              Tok_Loop      |
+              Tok_Null      |
+              Tok_Pause     |
+              Tok_Select    |
+              Tok_Step      |
+              Tok_Wait      |
+              Tok_While     =>
+
+            --  But before we decide that it's a statement, let's check for
+            --  a reserved word misused as an identifier.
+
+            if Is_Reserved_Identifier then
+               Save_Scan_State (Scan_State);
+               Scan; -- past the token
+
+               --  If reserved identifier not followed by colon or comma, then
+               --  this is most likely an assignment statement to the bad id.
+
+               if Token /= Tok_Colon and then Token /= Tok_Comma then
+                  Restore_Scan_State (Scan_State);
+                  --  Statement_When_Declaration_Expected
+                  --    (Decls, Done, In_Spec);
+                  return;
+
+                  --  Otherwise we have a declaration of the bad id
+
+               else
+                  Restore_Scan_State (Scan_State);
+                  Scan_Reserved_Identifier (Force_Msg => True);
+                  P_Identifier_Declarations (Decls, Done, In_Spec);
+               end if;
+
+               --  If not reserved identifier, then it's definitely a statement
+
+            else
+               --  Statement_When_Declaration_Expected (Decls, Done, In_Spec);
+               return;
+            end if;
+
+            --  The token RETURN may well also signal a missing BEGIN situation,
+            --  however, we never let it end the declarative part, because it may
+            --  also be part of a half-baked function declaration.
+
+         when Tok_Return =>
+            Error_Msg_SC ("misplaced RETURN statement");
+            raise Error_Resync;
+
+            --  PRIVATE definitely terminates the declarations in a spec,
+            --  and is an error in a body.
+
+         when Tok_Private =>
+            if In_Spec then
+               Done := True;
+            else
+               Error_Msg_SC ("PRIVATE not allowed in body");
+               Scan; -- past PRIVATE
+            end if;
+
+            --  An end of file definitely terminates the declarations!
+
+         when Tok_EOF =>
+            Done := True;
+
+            --  The remaining tokens do not end the scan, but cannot start a
+            --  valid declaration, so we signal an error and resynchronize.
+            --  But first check for misuse of a reserved identifier.
+
+         when others =>
+
+            --  Here we check for a reserved identifier
+
+            if Is_Reserved_Identifier then
+               Save_Scan_State (Scan_State);
+               Scan; -- past the token
+
+               if Token /= Tok_Colon and then Token /= Tok_Comma then
+                  Restore_Scan_State (Scan_State);
+                  Error_Msg_SC ("declaration expected");
+                  raise Error_Resync;
+               else
+                  Restore_Scan_State (Scan_State);
+                  Scan_Reserved_Identifier (Force_Msg => True);
+                  P_Identifier_Declarations (Decls, Done, In_Spec);
+               end if;
+
+            else
+               Error_Msg_SC ("declaration expected");
+               raise Error_Resync;
+            end if;
+      end case;
+
+      --  To resynchronize after an error, we scan to the next semicolon and
+      --  return with Done = False, indicating that there may still be more
+      --  valid declarations to come.
+
+   exception
+      when Error_Resync =>
+         Resync_Past_Semicolon;
+         Done := False;
+   end P_Reactive_Declarative_Items;
+
+
+   ----------------------------
+   -- P_Reactive_One_Section --
+   ----------------------------
+
+   procedure P_Reactive_One_Section (React_Body : Node_Id) is
+
+      Specification_Node : Node_Id;
+      Name_Node          : Node_Id;
+      Proc_Node          : Node_Id;
+      Proc_Name          : Name_Id;
+      --  Scan_State         : Saved_Scan_State;
+
+      procedure Set_Null_HSS;
+      --  Construct an empty handled statement sequence and install in Parent
+      --  Leaves HSS set to reference the newly constructed statement sequence.
+
+      procedure P_Reactive_Initialize;
+      --  Parse Initialize section.
+
+      procedure P_Reactive_Finalize;
+      --  Parse the finalization section.
+
+      procedure P_Reactive_Reaction;
+      --  Parse the reaction section
+
+      procedure P_Reactive_Flow;
+      --  Parse the Flow section.
+
+      ------------------
+      -- Set_Null_HSS --
+      ------------------
+
+      procedure Set_Null_HSS is
+         Null_Stm : Node_Id;
+         HSS      : Node_Id;
+
+      begin
+         Null_Stm :=
+           Make_Null_Statement (Token_Ptr);
+         Set_Comes_From_Source (Null_Stm, False);
+
+         HSS :=
+           Make_Handled_Sequence_Of_Statements
+             (Token_Ptr,
+              Statements => New_List (Null_Stm));
+         Set_Comes_From_Source (HSS, False);
+
+         Set_Handled_Statement_Sequence (Proc_Node, HSS);
+      end Set_Null_HSS;
+
+      ---------------------------
+      -- P_Reactive_Initialize --
+      ---------------------------
+
+      procedure P_Reactive_Initialize is
+      begin
+         Set_Initialize_Proc (Body_Description (React_Body), Proc_Node);
+
+         if Token = Tok_Null then
+            Scan; -- Past NULL
+            Set_Null_HSS;
+
+            T_Semicolon;
+         else
+            Set_Handled_Statement_Sequence
+              (Proc_Node,
+               Make_Handled_Sequence_Of_Statements
+                 (Token_Ptr,
+                  Statements =>
+                    P_Sequence_Of_Statements (SS_Flow_Sreq)));
+
+            End_Statements (Handled_Statement_Sequence (Proc_Node));
+         end if;
+      end P_Reactive_Initialize;
+
+      -------------------------
+      -- P_Reactive_Finalize --
+      -------------------------
+
+      procedure P_Reactive_Finalize is
+      begin
+         Set_Finalize_Proc (Body_Description (React_Body), Proc_Node);
+
+         if Token = Tok_Null then
+            Scan; -- Past NULL
+            Set_Null_HSS;
+
+            T_Semicolon;
+         else
+            Set_Handled_Statement_Sequence
+              (Proc_Node,
+               Make_Handled_Sequence_Of_Statements
+                 (Token_Ptr,
+                  Statements =>
+                    P_Sequence_Of_Statements (SS_Flow_Sreq)));
+
+            End_Statements (Handled_Statement_Sequence (Proc_Node));
+         end if;
+      end P_Reactive_Finalize;
+
+      -------------------------
+      -- P_Reactive_Reaction --
+      -------------------------
+
+      procedure P_Reactive_Reaction is
+      begin
+         Set_Reaction_Proc (Body_Description (React_Body), Proc_Node);
+
+         if Token = Tok_Null then
+            Scan; -- Past NULL
+            Set_Null_HSS;
+
+            T_Semicolon;
+         else
+            Scope.Table (Scope.Last).Reaction_Section := True;
+
+            Set_Handled_Statement_Sequence
+              (Proc_Node,
+               Make_Handled_Sequence_Of_Statements
+                 (Token_Ptr,
+                  Statements =>
+                    P_Sequence_Of_Statements
+                      (SS_Flow_Sreq, RS_Allow)));
+
+            Scope.Table (Scope.Last).Reaction_Section := False;
+
+            End_Statements (Handled_Statement_Sequence (Proc_Node));
+         end if;
+
+      end P_Reactive_Reaction;
+
+      ---------------------
+      -- P_Reactive_Flow --
+      ---------------------
+
+      procedure P_Reactive_Flow is
+      begin
+         Set_Flow_Proc (Body_Description (React_Body), Proc_Node);
+
+         if Token = Tok_Null then
+            Scan; -- Past NULL
+            Set_Null_HSS;
+
+            T_Semicolon;
+         else
+            Scope.Table (Scope.Last).Flow_Section := True;
+            Set_Handled_Statement_Sequence
+              (Proc_Node,
+               Make_Handled_Sequence_Of_Statements
+                 (Token_Ptr,
+                  Statements =>
+                    P_Sequence_Of_Statements
+                      (SS_Flow_Sreq, RS_Flow)));
+            Scope.Table (Scope.Last).Flow_Section := False;
+
+            End_Statements (Handled_Statement_Sequence (Proc_Node));
+         end if;
+      end P_Reactive_Flow;
+
+   begin
+      --  Set up scope stack entry. Note that the Labl field will be set later
+
+      SIS_Entry_Active := False;
+      SIS_Missing_Semicolon_Message := No_Error_Msg;
+      Push_Scope_Stack;
+      Scope.Table (Scope.Last).Sloc := Token_Ptr;
+      Scope.Table (Scope.Last).Etyp := E_Name;
+      Scope.Table (Scope.Last).Ecol := Start_Column;
+      Scope.Table (Scope.Last).Lreq := False;
+
+      Scan; -- Past PROCEDURE
+
+      Name_Node := P_Defining_Identifier;
+
+      Scope.Table (Scope.Last).Labl := Name_Node;
+      Ignore (Tok_Colon);
+
+      Specification_Node :=
+        New_Node (N_Procedure_Specification, Token_Ptr);
+      Set_Defining_Unit_Name (Specification_Node, Name_Node);
+
+      --  Deal with semicolon followed by IS. We want to treat this as IS
+
+      if Token = Tok_Semicolon then
+         Scan; -- past semicolon
+
+         if Token = Tok_Is then
+            Error_Msg_SP -- CODEFIX
+              ("extra "";"" ignored");
+         end if;
+      end if;
+
+      T_Is;
+
+      --  Build and return subprogram body, parsing declarations
+      --  and statement sequence that belong to the body.
+
+      Proc_Node :=
+        New_Node (N_Subprogram_Body, Sloc (Specification_Node));
+      Set_Specification (Proc_Node, Specification_Node);
+
+      Proc_Name := Chars (Name_Node);
+      if Proc_Name = Name_Initialize then
+         P_Reactive_Initialize;
+
+      elsif Proc_Name = Name_Finalize then
+         P_Reactive_Finalize;
+
+      elsif Proc_Name = Name_Reaction then
+         P_Reactive_Reaction;
+
+      elsif Proc_Name = Name_Flow then
+         P_Reactive_Flow;
+
+      else
+         Error_Msg_SC
+           ("only initialize, finalize, reaction and flow" &
+            " sections allowed here!");
+      end if;
+   end P_Reactive_One_Section;
+
+
+   ---------------------------
+   -- P_Reactive_Subprogram --
+   ---------------------------
+
+   procedure P_Reactive_Subprogram (React_Body : Node_Id) is
+
+      Specification_Node : Node_Id;
+      Name_Node          : Node_Id;
+      Body_Node          : Node_Id;
+      --  Scan_State         : Saved_Scan_State;
+   begin
+      Put_Line ("P_Reactive_Subprogram Begin " & Token'Img);
+      --  Set up scope stack entry. Note that the Labl field will be set later
+
+      SIS_Entry_Active := False;
+      SIS_Missing_Semicolon_Message := No_Error_Msg;
+      Push_Scope_Stack;
+      Scope.Table (Scope.Last).Sloc := Token_Ptr;
+      Scope.Table (Scope.Last).Etyp := E_Name;
+      Scope.Table (Scope.Last).Ecol := Start_Column;
+      Scope.Table (Scope.Last).Lreq := False;
+
+      Scan; -- Past PROCEDURE
+
+      Name_Node := P_Defining_Identifier;
+      Put_Line ("   Name ==> " & Get_String (Chars (Name_Node)));
+
+      Scope.Table (Scope.Last).Labl := Name_Node;
+      Ignore (Tok_Colon);
+
+      Specification_Node :=
+        New_Node (N_Procedure_Specification, Token_Ptr);
+      Set_Defining_Unit_Name (Specification_Node, Name_Node);
+
+      --  Deal with semicolon followed by IS. We want to treat this as IS
+
+      if Token = Tok_Semicolon then
+         Scan; -- past semicolon
+
+         if Token = Tok_Is then
+            Error_Msg_SP -- CODEFIX
+              ("extra "";"" ignored");
+         end if;
+      end if;
+
+      T_Is;
+
+      --  Deal with generic instantiation, the one case in which we do not
+      --  have a subprogram specification as part of whatever we are parsing
+
+      if Token = Tok_New then
+         Error_Msg_SC ("generic instantiation not allowed here!");
+
+         Scan; -- past NEW
+
+         Discard_Junk_Node (P_Qualified_Simple_Name);
+         Discard_Junk_List (P_Generic_Actual_Part_Opt);
+         Pop_Scope_Stack; -- Don't need scope stack entry in this case
+         return; --  Empty;
+
+      elsif Token = Tok_Renames then
+         Error_Msg_SC ("renaming declaration not allowed here!");
+
+         Scan; -- past RENAMES
+         Discard_Junk_Node (P_Name);
+         TF_Semicolon;
+         Pop_Scope_Stack;
+         return; -- Empty;
+
+         --  elsif Token = Tok_Null then
+         --     Set_Null_Present (Specification_Node);
+         --     return Empty; ---- Attention
+
+      elsif Token = Tok_Left_Paren then
+         Error_Msg_SC ("reactive procedure cannot have formal parameters!");
+         Discard_Junk_List (P_Parameter_Profile);
+      end if;
+
+      --  Subprogram body stub case
+
+      if Separate_Present then
+         Error_Msg_SC ("body stub not allowed here!");
+         Scan; -- past SEPARATE
+         Pop_Scope_Stack;
+         TF_Semicolon;
+         return; --  Empty;
+
+         --  Subprogram body or expression function case
+      else
+         --  Build and return subprogram body, parsing declarations
+         --  and statement sequence that belong to the body.
+
+         Body_Node :=
+           New_Node (N_Subprogram_Body, Sloc (Specification_Node));
+         Set_Specification (Body_Node, Specification_Node);
+
+         Reactive_Parse_Decls_Begin_End (Body_Node, React_Body);
+
+         Put_Line ("P_Reactive_Subprogram End");
+         return; --  Body_Node;
+      end if;
+   end P_Reactive_Subprogram;
+
+end Ch14;
