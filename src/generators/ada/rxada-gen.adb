@@ -30,8 +30,8 @@ with Namet; use Namet;
 with RxAda.Gen.Dispatch;
 
 with Reflex.Infos; use Reflex.Infos;
-with Reflex.Visitor;
-with Reflex.Simple_Accept;
+--  with Reflex.Visitor;
+--  with Reflex.Simple_Accept;
 
 package body Rxada.Gen is
    

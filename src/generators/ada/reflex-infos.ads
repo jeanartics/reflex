@@ -28,7 +28,7 @@ with Namet; use Namet;
 with Artics.Strings_Stocks; use Artics.Strings_Stocks;
 
 with Reflex.Types; use Reflex.Types;
-with Reflex.Entities_Lists; use Reflex.Entities_Lists;
+with Reflex.Entities_Lists; --use Reflex.Entities_Lists;
 
 package Reflex.Infos is
 

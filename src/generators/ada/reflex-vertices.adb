@@ -74,7 +74,7 @@ package body Reflex.Vertices is
    function New_Vertex (V : access Vertex_Record) return Vertex_Id is
       Id : Vertex_Id;
    begin
-      Id := Vertices_Nodes.New_Elmt (V);
+      Id := Vertices_Nodes.New_Elmt (Vertex_Class_Ptr (V));
       
       return Id;
    end New_Vertex;

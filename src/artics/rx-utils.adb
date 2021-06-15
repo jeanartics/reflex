@@ -33,7 +33,7 @@ with System;
 
 package body Rx.Utils is
    
-   pragma Linker_Options ("executable_path.o");
+   -- pragma Linker_Options ("executable_path.o");
    
    function Count_For_Split
      (Str              : String;
@@ -470,9 +470,9 @@ package body Rx.Utils is
    ---------------------
 
    function Executable_Path return String is
-      function Internal
-         (Str : System.Address; Length : Integer) return Integer;
-      pragma Import (C, Internal, "c_executable_path");
+      --  function Internal
+      --     (Str : System.Address; Length : Integer) return Integer;
+      --  pragma Import (C, Internal, "c_executable_path");
 
       --  Allocate a buffer of size 32K (maximum path on windows platform when
       --  prefixing the path with \?. This should also cover Linux and MacOS.
@@ -481,8 +481,8 @@ package body Rx.Utils is
       --  Length of returned path by system low level functions
       Allocated : Integer;
    begin
-      Allocated := Internal (Result'Address, Result'Length);
-
+      -- Allocated := Internal (Result'Address, Result'Length);
+      return "./";
       if Allocated = 0 or else Allocated >= Result'Length then
          --  If we cannot get the executable name through system API, fallback
          --  on argv[0] which is less accurate.
