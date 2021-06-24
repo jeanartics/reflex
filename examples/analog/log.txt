@@ -1,0 +1,126 @@
+Aspect_Specifications_Present Begin TOK_IS
+Not with
+Aspect_Specifications_Present Begin TOK_IDENTIFIER
+Not with
+P_Aspect_Specifications Begin TOK_SEMICOLON
+Aspect_Specifications_Present Begin TOK_SEMICOLON
+Not with
+P_Aspect_Specifications End
+P_Aspect_Specifications Begin TOK_SEMICOLON
+Aspect_Specifications_Present Begin TOK_SEMICOLON
+Not with
+P_Aspect_Specifications End
+P_Aspect_Specifications Begin TOK_SEMICOLON
+Aspect_Specifications_Present Begin TOK_SEMICOLON
+Not with
+P_Aspect_Specifications End
+P_Aspect_Specifications Begin TOK_SEMICOLON
+Aspect_Specifications_Present Begin TOK_SEMICOLON
+Not with
+P_Aspect_Specifications End
+P_Aspect_Specifications Begin TOK_SEMICOLON
+Aspect_Specifications_Present Begin TOK_SEMICOLON
+Not with
+P_Aspect_Specifications End
+P_Aspect_Specifications Begin TOK_SEMICOLON
+Aspect_Specifications_Present Begin TOK_SEMICOLON
+Not with
+P_Aspect_Specifications End
+Aspect_Specifications_Present Begin TOK_IS
+Not with
+Aspect_Specifications_Present Begin TOK_IS
+Not with
+Aspect_Specifications_Present Begin TOK_WITH
+===================================>With_Present is true
+Aspect Token_Name initial_condition
+Aspect_Specifications_Present Result TRUE
+P_Aspect_Specifications Begin TOK_WITH
+Aspect_Specifications_Present Begin TOK_WITH
+===================================>With_Present is true
+Aspect Token_Name initial_condition
+Aspect_Specifications_Present Result TRUE
+   Token_Name initial_condition
+P_Aspect_Specifications End
+P_Aspect_Specifications Begin TOK_SEMICOLON
+Aspect_Specifications_Present Begin TOK_SEMICOLON
+Not with
+P_Aspect_Specifications End
+Begin ======================================== TOK_WITH
+P_Aspect_Specifications Begin TOK_WITH
+Aspect_Specifications_Present Begin TOK_WITH
+===================================>With_Present is true
+Aspect Token_Name annotate
+Aspect_Specifications_Present Result TRUE
+   Token_Name annotate
+P_Aspect_Specifications End
+End   ======================================== TOK_SUBTYPE
+P_Aspect_Specifications Begin TOK_WITH
+Aspect_Specifications_Present Begin TOK_WITH
+===================================>With_Present is true
+Aspect Token_Name annotat
+Aspect_Specifications_Present Result TRUE
+   Token_Name annotat
+P_Aspect_Specifications End
+P_Aspect_Specifications Begin TOK_WITH
+Aspect_Specifications_Present Begin TOK_WITH
+===================================>With_Present is true
+Aspect Token_Name address
+Aspect_Specifications_Present Result TRUE
+   Token_Name address
+P_Aspect_Specifications End
+Aspect_Specifications_Present Begin TOK_WITH
+===================================>With_Present is true
+Aspect Token_Name global
+Aspect_Specifications_Present Result TRUE
+======> Subprogram Aspect TOK_WITH
+Aspect_Specifications_Present Begin TOK_WITH
+===================================>With_Present is true
+Aspect Token_Name global
+Aspect_Specifications_Present Result TRUE
+   Token_Name global
+   Token_Name pre
+Aspect_Specifications_Present Begin TOK_SEMICOLON
+Not with
+======> Subprogram Aspect TOK_FUNCTION
+Aspect_Specifications_Present Begin TOK_FUNCTION
+Not with
+Aspect_Specifications_Present Begin TOK_SEMICOLON
+Not with
+======> Subprogram Aspect TOK_SUBTYPE
+Aspect_Specifications_Present Begin TOK_SUBTYPE
+Not with
+P_Aspect_Specifications Begin TOK_SEMICOLON
+Aspect_Specifications_Present Begin TOK_SEMICOLON
+Not with
+P_Aspect_Specifications End
+Aspect_Specifications_Present Begin TOK_SEMICOLON
+Not with
+======> Subprogram Aspect TOK_END
+Aspect_Specifications_Present Begin TOK_END
+Not with
+Analyze_Type_Declaration Begin
+Find_Type_Name Begin
+Before Enter Name
+Aspect_Specifications_Present Begin TOK_IS
+Not with
+Aspect_Specifications_Present Begin TOK_IS
+Not with
+Aspect_Specifications_Present Begin TOK_BEGIN
+Not with
+Aspect_Specifications_Present Begin TOK_IS
+Not with
+Aspect_Specifications_Present Begin TOK_BEGIN
+Not with
+Aspect_Specifications_Present Begin TOK_IS
+Not with
+Aspect_Specifications_Present Begin TOK_BEGIN
+Not with
+Aspect_Specifications_Present Begin TOK_IS
+Not with
+Aspect_Specifications_Present Begin TOK_BEGIN
+Not with
+Unit Name      => ana
+Body_Comp_Unit => N_COMPILATION_UNIT
+Body_Node      => N_SUBPROGRAM_BODY
+Spec_Comp_Unit => N_COMPILATION_UNIT
+Sepc_Node      => N_SUBPROGRAM_BODY
